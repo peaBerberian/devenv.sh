@@ -1,20 +1,96 @@
 #!/bin/bash
 set -e
 
-# Detect if running on Windows (Git Bash, MSYS2, Cygwin, WSL)
-detect_windows() {
-    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
-        return 0
-    elif [[ -n "$WINDIR" ]] || [[ -n "$SYSTEMROOT" ]]; then
-        return 0
-    fi
-    return 1
+# Detect the current operating system
+detect_os() {
+    case "$OSTYPE" in
+        darwin*)
+            echo "macos"
+            return
+            ;;
+        msys*|cygwin*|win32)
+            echo "windows"
+            return
+            ;;
+        linux*)
+            # Check if running in WSL
+            if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+                echo "wsl"
+            else
+                echo "linux"
+            fi
+            return
+            ;;
+        *)
+            echo "unknown"
+            return
+            ;;
+    esac
 }
 
 IS_WINDOWS=0
-if detect_windows; then
+HOST_OS=$(detect_os)
+if [[ "$HOST_OS" == "windows" || "$HOST_OS" == "wsl" ]]; then
     IS_WINDOWS=1
 fi
+
+# Detect display server (X11, Wayland, or XQuartz on macOS)
+detect_display_server() {
+    case "$HOST_OS" in
+        macos)
+            # Check if XQuartz is running
+            if pgrep -x "Xquartz" > /dev/null 2>&1 || [[ -n "$DISPLAY" ]]; then
+                echo "xquartz"
+            else
+                echo "none"
+            fi
+            return
+            ;;
+        windows)
+            echo "windows"
+            return
+            ;;
+        wsl)
+            echo "wsl"
+            return
+            ;;
+        linux)
+            # Check XDG_SESSION_TYPE (most reliable on modern systems)
+            if [[ -n "$XDG_SESSION_TYPE" ]]; then
+                case "$XDG_SESSION_TYPE" in
+                    wayland)
+                        echo "wayland"
+                        return
+                        ;;
+                    x11)
+                        echo "x11"
+                        return
+                        ;;
+                esac
+            fi
+
+            # Check WAYLAND_DISPLAY
+            if [[ -n "$WAYLAND_DISPLAY" ]]; then
+                echo "wayland"
+                return
+            fi
+
+            # Check DISPLAY (X11)
+            if [[ -n "$DISPLAY" ]]; then
+                echo "x11"
+                return
+            fi
+
+            # Default to none if we can't detect
+            echo "none"
+            return
+            ;;
+        *)
+            echo "none"
+            return
+            ;;
+    esac
+}
 
 # Convert Windows paths to Unix paths for Docker
 normalize_path() {
@@ -340,6 +416,7 @@ config_init() {
     config_set "install_zellij" ""
     config_set "install_jujutsu" ""
     config_set "project_host_path" ""
+    config_set "enable_gui" ""
 }
 
 # Check that the given name does not have already project files. Exits on error if so.
@@ -541,6 +618,11 @@ GIT_AUTHOR_NAME="$safe_git_name"
 # Git author and committer e-mail used inside the container
 # Can also be empty to not set that in the container.
 GIT_AUTHOR_EMAIL="$safe_git_email"
+
+# GUI support
+# Set to "true" to enable GUI application support
+# This will configure the appropriate display server (X11/Wayland)
+ENABLE_GUI="$(config_get enable_gui)"
 EOF
 
     # Generate YAML
@@ -570,6 +652,127 @@ EOF
     for vol in "${volumes[@]}"; do
         echo "      - $vol" >> "$compose_file"
     done
+
+    # Add GUI-specific configuration if enabled
+    if [[ "$(config_get enable_gui)" == "true" ]]; then
+        local display_type=$(detect_display_server)
+        
+        case "$display_type" in
+            x11)
+                cat >> "$env_file" <<EOF
+
+# GUI configuration
+# TODO: check if envs exist and sanitize?
+XAUTHORITY="$XAUTHORITY"
+DISPLAY="$DISPLAY"
+EOF
+                cat >> "$compose_file" <<EOF
+      # X11 socket for GUI apps
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Xauthority for X11 authentication
+      - \${XAUTHORITY:-\$HOME/.Xauthority}:/home/\${USERNAME}/.Xauthority:ro
+EOF
+                ;;
+            wayland)
+                cat >> "$env_file" <<EOF
+
+# GUI configuration
+# TODO: check if envs exist and sanitize?
+XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR"
+WAYLAND_DISPLAY="$WAYLAND_DISPLAY"
+DISPLAY="$DISPLAY"
+EOF
+                cat >> "$compose_file" <<EOF
+      # Wayland socket for GUI apps
+      - \${XDG_RUNTIME_DIR}/\${WAYLAND_DISPLAY:-wayland-0}:/tmp/\${WAYLAND_DISPLAY:-wayland-0}:rw
+EOF
+                ;;
+            xquartz)
+                info "macOS detected: Ensure XQuartz is installed and running"
+                info "You may need to enable 'Allow connections from network clients' in XQuartz preferences"
+                cat >> "$env_file" <<EOF
+
+# GUI configuration
+# TODO: check if envs exist and sanitize?
+XAUTHORITY="$XAUTHORITY"
+DISPLAY="$DISPLAY"
+EOF
+                cat >> "$compose_file" <<EOF
+      # X11 socket for XQuartz on macOS
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+EOF
+                ;;
+            wsl)
+                info "WSL detected: GUI support via WSLg (built-in) or X server like VcXsrv"
+                cat >> "$compose_file" <<EOF
+      # X11 socket for GUI apps (WSL)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /mnt/wslg:/mnt/wslg:rw
+EOF
+                ;;
+            windows)
+                warn "Windows detected: GUI support requires an X server like VcXsrv or Xming"
+                warn "Set DISPLAY environment variable (typically host.docker.internal:0.0)"
+                ;;
+            none)
+                warn "No display server detected. GUI apps may not work."
+                warn "For macOS: Install XQuartz from https://www.xquartz.org/"
+                warn "For Linux: Ensure X11 or Wayland is running"
+                warn "For Windows: Install VcXsrv or Xming"
+                ;;
+        esac
+
+        # Add environment variables for GUI
+        cat >> "$compose_file" <<EOF
+    environment:
+EOF
+        case "$display_type" in
+            x11)
+                cat >> "$compose_file" <<EOF
+      - DISPLAY=\${DISPLAY}
+EOF
+                ;;
+            wayland)
+                cat >> "$compose_file" <<EOF
+      - WAYLAND_DISPLAY=\${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=/tmp
+      - QT_QPA_PLATFORM=wayland
+      - GDK_BACKEND=wayland
+      - DISPLAY=\${DISPLAY:-:0}
+EOF
+                ;;
+            xquartz)
+                cat >> "$compose_file" <<EOF
+      - DISPLAY=host.docker.internal:\${DISPLAY##*:}
+EOF
+                ;;
+            wsl)
+                cat >> "$compose_file" <<EOF
+      - DISPLAY=\${DISPLAY:-:0}
+      - WAYLAND_DISPLAY=\${WAYLAND_DISPLAY}
+      - XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir
+      - PULSE_SERVER=/mnt/wslg/PulseServer
+EOF
+                ;;
+            windows)
+                cat >> "$compose_file" <<EOF
+      - DISPLAY=\${DISPLAY:-host.docker.internal:0.0}
+EOF
+                ;;
+            none)
+                cat >> "$compose_file" <<EOF
+      - DISPLAY=\${DISPLAY:-:0}
+EOF
+                ;;
+        esac
+
+        # Add network mode for X11 on Linux only
+        if [[ "$display_type" == "x11" ]]; then
+            cat >> "$compose_file" <<EOF
+    network_mode: host
+EOF
+        fi
+    fi
 
     echo "" >> "$compose_file"
 }
@@ -778,6 +981,30 @@ prompt_sudo() {
     fi
 }
 
+prompt_gui() {
+    if [[ -n "$(config_get enable_gui)" ]]; then
+        return
+    fi
+
+    echo ""
+    info "=== GUI ==="
+    local dt=$(detect_display_server)
+    case "$dt" in
+        x11) echo "Detected: X11" ;;
+        wayland) echo "Detected: Wayland" ;;
+        xquartz) echo "Detected: XQuartz" ;;
+        wsl) echo "Detected: WSL" ;;
+        windows) echo "Windows (needs X server)" ;;
+        none) warn "No display" ;;
+    esac
+    read -r -p "Enable GUI? (y/N): " gui_choice
+    if [[ $gui_choice =~ ^[Yy]$ ]]; then
+        config_set "enable_gui" "true"
+    else
+      config_set "enable_gui" "false"
+    fi
+}
+
 # Prompt for ports if not set
 prompt_ports() {
     local ports_var="$1"
@@ -933,6 +1160,10 @@ cmd_create() {
               config_set "enable_sudo" "true"
               shift
               ;;
+            --enable-gui|--gui)
+              config_set "enable_gui" "true";
+              shift
+              ;;
             --git-name)
                 validate_git_name "$2"
                 config_set "git_name" "$2"
@@ -1035,6 +1266,9 @@ cmd_create() {
         if [[ -z "$(config_get enable_sudo)" ]]; then
             config_set "enable_sudo" "false"
         fi
+        if [[ -z "$(config_get enable_gui)" ]]; then
+            config_set "enable_gui" "false"
+        fi
         if [[ -z "$(config_get install_neovim)" ]]; then
             config_set "install_neovim" "false"
         fi
@@ -1061,6 +1295,7 @@ cmd_create() {
         prompt_tools
         mise_check $no_prompt
         prompt_sudo
+        prompt_gui
         prompt_packages
 
         # Only prompt for ports if none were specified
@@ -1313,6 +1548,7 @@ Options for create (all optional):
                            (prompted if no language specified)
   --enable-sudo            Enable sudo access in container with a "dev" password
                            (prompted if not specified)
+  --enable-gui             Enable GUI support (through your OS X11/Wayland/XQuartz implementation)
   --git-name NAME          Git user.name (optional)
   --git-email EMAIL        Git user.email (optional)
   --neovim                 Install Neovim (text editor)
@@ -1361,6 +1597,7 @@ Full Configuration Example:
     --zellij \\
     --jujutsu \\
     --enable-sudo \\
+    --enable-gui \\
     --git-name "John Doe" \\
     --git-email "john@example.com" \\
     --packages "ripgrep fzf bat" \\
