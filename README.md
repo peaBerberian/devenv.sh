@@ -288,3 +288,4 @@ will be removed when the container is exited).
 - Does cache pruning in `clean` actually does anything?
 - ci tests for clean command
 - Add delta Pager diff tool
+- Update Dockerfile when not same version

@@ -157,7 +157,7 @@ RUN if [ "$INSTALL_STARSHIP" = "true" ]; then \
 
 # Install Oh My Posh (optional)
 RUN if [ "$INSTALL_OH_MY_POSH" = "true" ]; then \
-    curl -s https://ohmyposh.dev/install.sh | bash -s; \
+	  curl -s https://ohmyposh.dev/install.sh | bash -s -- -d /usr/local/bin; \
   fi
 
 # Install Jujutsu (optional)
