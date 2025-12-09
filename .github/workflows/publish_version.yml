@@ -53,12 +53,6 @@ jobs:
             found
           ' CHANGELOG.md > CHANGELOG_LATEST.md
       
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG_LATEST.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      
-          echo "Extracted changelog:"
-          cat CHANGELOG_LATEST.md
 
       - name: Create GitHub Release
         id: create_release
@@ -71,7 +65,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             $prerelease_flag \
             --title "$GITHUB_REF_NAME" \
-            --notes "${{ steps.changelog.outputs.notes }}"
+            --notes-file CHANGELOG_LATEST.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
