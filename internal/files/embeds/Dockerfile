@@ -1,4 +1,4 @@
-# Dockerfile - Version: 1.0.0
+# Dockerfile - Version: 1.1.0
 # ===========================
 #
 # This "Dockerfile" sets a basic Ubuntu LTS environment with a shell, the wanted

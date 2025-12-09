@@ -218,42 +218,33 @@ func (f *FileStore) CreateProjectFiles(
 
 // Write the base Dockerfile file in the base directory if not already done
 func (f *FileStore) ensureCreatedBaseFiles() error {
-	// Write Dockerfile if needed
-	baseDockerfilePath := filepath.Join(f.baseDataDir, "Dockerfile")
-	_, err := os.Stat(baseDockerfilePath)
-	if os.IsNotExist(err) {
-		dockerfileData, err := assets.ReadFile("embeds/Dockerfile")
-		if err != nil {
-			return err
-		}
-
-		if err = f.userFS.MkdirAsUser(f.baseDataDir, 0755); err != nil {
-			return err
-		}
-		if err = f.userFS.WriteFileAsUser(
-			filepath.Join(f.baseDataDir, "Dockerfile"),
-			dockerfileData, 0644); err != nil {
-			return err
-		}
-	} else if err != nil {
+	// Write Dockerfile
+	// TODO:Check if required first?
+	dockerfileData, err := assets.ReadFile("embeds/Dockerfile")
+	if err != nil {
 		return err
 	}
 
-	baseEntryPointPath := filepath.Join(f.baseDataDir, "entrypoint.sh")
-	_, err = os.Stat(baseEntryPointPath)
-	if os.IsNotExist(err) {
-		entrypointData, err := assets.ReadFile("embeds/entrypoint.sh")
-		if err != nil {
-			return err
-		}
+	if err = f.userFS.MkdirAsUser(f.baseDataDir, 0755); err != nil {
+		return err
+	}
+	if err = f.userFS.WriteFileAsUser(
+		filepath.Join(f.baseDataDir, "Dockerfile"),
+		dockerfileData, 0644); err != nil {
+		return err
+	}
 
-		err = f.userFS.WriteFileAsUser(
-			filepath.Join(f.baseDataDir, "entrypoint.sh"),
-			entrypointData, 0644)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
+	// Write entrypoint
+	// TODO:Check if required first?
+	entrypointData, err := assets.ReadFile("embeds/entrypoint.sh")
+	if err != nil {
+		return err
+	}
+
+	err = f.userFS.WriteFileAsUser(
+		filepath.Join(f.baseDataDir, "entrypoint.sh"),
+		entrypointData, 0644)
+	if err != nil {
 		return err
 	}
 
