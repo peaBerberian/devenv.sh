@@ -6,7 +6,7 @@ import "github.com/peaberberian/paul-envs/internal/utils"
 // TODO: automatize
 var Version = utils.Version{
 	Major: 0,
-	Minor: 1,
+	Minor: 2,
 	Patch: 0,
 }
 
@@ -15,9 +15,13 @@ var Version = utils.Version{
 // Dockerfile + compose.yaml file. As such a new minor for base files is
 // still compatible to older project files with the same major, but not
 // vice-versa.
+//
+// # Changes
+// - 1.0.0: Base version
+// - 1.1.0: Added `INSTALL_OH_MY_POSH` env installing the `Oh My Posh` prompt
 var DockerfileVersion = utils.Version{
 	Major: 1,
-	Minor: 0,
+	Minor: 1,
 	Patch: 0,
 }
 

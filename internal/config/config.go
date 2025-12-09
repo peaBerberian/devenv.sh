@@ -89,6 +89,7 @@ type Config struct {
 	// anything else == don't.
 	InstallNeovim   bool
 	InstallStarship bool
+	InstallOhMyPosh bool
 	InstallAtuin    bool
 	InstallMise     bool
 	InstallZellij   bool

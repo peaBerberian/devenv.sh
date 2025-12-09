@@ -59,6 +59,8 @@ Options for create (all optional):
                            (prompted if no tool specified)
   --starship               Install Starship (prompt)
                            (prompted if no tool specified)
+  --oh-my-posh             Install Oh My Posh (prompt)
+                           (prompted if no tool specified)
   --atuin                  Install Atuin (shell history)
                            (prompted if no tool specified)
   --mise                   Install Mise (version manager - required for specific language versions)

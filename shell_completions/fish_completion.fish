@@ -33,6 +33,7 @@ complete -c paul-envs -n "__fish_seen_subcommand_from create" -l enable-ssh -d "
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l enable-sudo -d "Enable sudo access (password: \"dev\")" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l neovim -d "Install Neovim" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l starship -d "Install Starship" -f
+complete -c paul-envs -n "__fish_seen_subcommand_from create" -l oh-my-posh -d "Install Oh My Posh" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l atuin -d "Install Atuin" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l mise -d "Install Mise" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l zellij -d "Install Zellij" -f

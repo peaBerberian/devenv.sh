@@ -81,6 +81,7 @@ type parsedFlags struct {
 	gitEmail        string
 	installNeovim   bool
 	installStarship bool
+	installOhMyPosh bool
 	installAtuin    bool
 	installMise     bool
 	installZellij   bool
@@ -115,6 +116,7 @@ func parseFlags(args []string) (*parsedFlags, bool, error) {
 	flagset.StringVar(&p.gitEmail, "git-email", "", "Git user email")
 	flagset.BoolVar(&p.installNeovim, "neovim", false, "Install Neovim")
 	flagset.BoolVar(&p.installStarship, "starship", false, "Install Starship")
+	flagset.BoolVar(&p.installOhMyPosh, "oh-my-posh", false, "Install Oh My Posh")
 	flagset.BoolVar(&p.installAtuin, "atuin", false, "Install Atuin")
 	flagset.BoolVar(&p.installMise, "mise", false, "Install Mise")
 	flagset.BoolVar(&p.installZellij, "zellij", false, "Install Zellij")
@@ -229,6 +231,7 @@ func buildConfig(projectPath string, p *parsedFlags) (config.Config, error) {
 	// Tools
 	cfg.InstallNeovim = p.installNeovim
 	cfg.InstallStarship = p.installStarship
+	cfg.InstallOhMyPosh = p.installOhMyPosh
 	cfg.InstallAtuin = p.installAtuin
 	cfg.InstallMise = p.installMise
 	cfg.InstallZellij = p.installZellij
@@ -311,6 +314,9 @@ func promptMissing(cons *console.Console, cfg *config.Config) error {
 		if err := promptTools(cons, cfg); err != nil {
 			return err
 		}
+	}
+	if cfg.InstallStarship && cfg.InstallOhMyPosh {
+		return fmt.Errorf("Starship and Oh My Posh cannot both be enabled — choose at most one prompt")
 	}
 
 	// Sudo
@@ -436,6 +442,7 @@ func hasAnyLanguage(cfg *config.Config) bool {
 
 func hasAnyTool(cfg *config.Config) bool {
 	return cfg.InstallNeovim || cfg.InstallStarship ||
+		cfg.InstallOhMyPosh ||
 		cfg.InstallAtuin || cfg.InstallMise ||
 		cfg.InstallZellij || cfg.InstallJujutsu
 }
@@ -582,10 +589,11 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 		cons.WriteLn("Which of those tools do you want to install? (space-separated numbers, or Enter to skip all)")
 		cons.WriteLn("  1) Neovim (text editor)")
 		cons.WriteLn("  2) Starship (prompt)")
-		cons.WriteLn("  3) Atuin (shell history)")
-		cons.WriteLn("  4) Mise (version manager - required for specific language versions)")
-		cons.WriteLn("  5) Zellij (terminal multiplexer)")
-		cons.WriteLn("  6) Jujutsu (Git-compatible VCS)")
+		cons.WriteLn("  3) Oh My Posh (prompt)")
+		cons.WriteLn("  4) Atuin (shell history)")
+		cons.WriteLn("  5) Mise (version manager - required for specific language versions)")
+		cons.WriteLn("  6) Zellij (terminal multiplexer)")
+		cons.WriteLn("  7) Jujutsu (Git-compatible VCS)")
 
 		choices, err := cons.AskString("Choice", "none")
 		if err != nil {
@@ -602,12 +610,14 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 			case "2":
 				cfg.InstallStarship = true
 			case "3":
-				cfg.InstallAtuin = true
+				cfg.InstallOhMyPosh = true
 			case "4":
-				cfg.InstallMise = true
+				cfg.InstallAtuin = true
 			case "5":
-				cfg.InstallZellij = true
+				cfg.InstallMise = true
 			case "6":
+				cfg.InstallZellij = true
+			case "7":
 				cfg.InstallJujutsu = true
 			case "none":
 				return nil
@@ -617,12 +627,18 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 			}
 		}
 
+		if cfg.InstallStarship && cfg.InstallOhMyPosh {
+			cons.Warn("You selected both starship and Oh My Posh prompts, choose at most only one between the two.")
+			allValid = false
+		}
+
 		if !allValid {
 			cons.Warn("Please select valid elements from the list, or leave empty for no tool.")
 			cons.WriteLn("")
 			// Reset any partial changes
 			cfg.InstallNeovim = false
 			cfg.InstallStarship = false
+			cfg.InstallOhMyPosh = false
 			cfg.InstallAtuin = false
 			cfg.InstallMise = false
 			cfg.InstallZellij = false

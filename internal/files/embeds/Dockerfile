@@ -84,6 +84,7 @@ ARG SUPPLEMENTARY_PACKAGES=""
 # Configurable tool installation
 ARG INSTALL_NEOVIM=false
 ARG INSTALL_STARSHIP=false
+ARG INSTALL_OH_MY_POSH=false
 ARG INSTALL_ATUIN=false
 ARG INSTALL_MISE=false
 ARG INSTALL_ZELLIJ=false
@@ -154,6 +155,11 @@ RUN if [ "$INSTALL_STARSHIP" = "true" ]; then \
     curl -sS https://starship.rs/install.sh | sh -s -- -y; \
   fi
 
+# Install Oh My Posh (optional)
+RUN if [ "$INSTALL_OH_MY_POSH" = "true" ]; then \
+    curl -s https://ohmyposh.dev/install.sh | bash -s; \
+  fi
+
 # Install Jujutsu (optional)
 RUN if [ "$INSTALL_JUJUTSU" = "true" ]; then \
     ARCH=$(uname -m) && \
@@ -195,13 +201,23 @@ USER ${USERNAME}
 # Add tool initialization lines BEFORE copying user configs
 # This ensures they're present if user doesn't provide custom configs
 
-# Install `starship` (optional)
+# Configure `starship` (optional)
 RUN if [ "$INSTALL_STARSHIP" = "true" ]; then \
     printf '\n# Initialize starship prompt\neval "$(starship init bash)"\n' >> /home/${USERNAME}/.bashrc && \
     if [ "$USER_SHELL" = "zsh" ]; then \
       printf '\n# Initialize starship prompt\neval "$(starship init zsh)"\n' >> /home/${USERNAME}/.zshrc; \
     elif [ "$USER_SHELL" = "fish" ]; then \
       printf '\n# Initialize starship prompt\nstarship init fish | source\n' >> /home/${USERNAME}/.config/fish/config.fish; \
+    fi; \
+  fi
+
+# Configure `Oh My Posh` (optional)
+RUN if [ "$INSTALL_OH_MY_POSH" = "true" ]; then \
+    printf '\n# Initialize oh-my-posh prompt\neval "$(oh-my-posh init bash)"\n' >> /home/${USERNAME}/.bashrc && \
+    if [ "$USER_SHELL" = "zsh" ]; then \
+      printf '\n# Initialize oh-my-posh prompt\neval "$(oh-my-posh init zsh)"\n' >> /home/${USERNAME}/.zshrc; \
+    elif [ "$USER_SHELL" = "fish" ]; then \
+      printf '\n# Initialize oh-my-posh prompt\noh-my-posh init fish | source\n' >> /home/${USERNAME}/.config/fish/config.fish; \
     fi; \
   fi
 

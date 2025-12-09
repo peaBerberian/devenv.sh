@@ -56,6 +56,7 @@ func generateProjectFiles(cfg *config.Config, filestore *files.FileStore) error 
 		Packages:        utils.EscapeEnvValue(strings.Join(cfg.Packages, " ")),
 		InstallNeovim:   strconv.FormatBool(cfg.InstallNeovim),
 		InstallStarship: strconv.FormatBool(cfg.InstallStarship),
+		InstallOhMyPosh: strconv.FormatBool(cfg.InstallOhMyPosh),
 		InstallAtuin:    strconv.FormatBool(cfg.InstallAtuin),
 		InstallMise:     strconv.FormatBool(cfg.InstallMise),
 		InstallZellij:   strconv.FormatBool(cfg.InstallZellij),

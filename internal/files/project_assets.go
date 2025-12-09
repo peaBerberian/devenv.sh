@@ -46,6 +46,7 @@ type EnvTemplateData struct {
 	Packages        string
 	InstallNeovim   string
 	InstallStarship string
+	InstallOhMyPosh string
 	InstallAtuin    string
 	InstallMise     string
 	InstallZellij   string

@@ -1,6 +1,10 @@
 # Changelog
 
-## v0.1.1 (Unreleased)
+## v0.2.0 (Unreleased)
+
+### Features
+
+- Add `Oh My Posh` prompt
 
 ### Bug fixes
 

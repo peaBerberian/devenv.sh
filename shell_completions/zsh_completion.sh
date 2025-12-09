@@ -50,6 +50,7 @@ _paulenvs() {
                         '--enable-sudo[Enable sudo access (password: \"dev\")]' \
                         '--neovim[Install latest Neovim]' \
                         '--starship[Install latest Starship]' \
+                        '--oh-my-posh[Install latest Oh My Posh]' \
                         '--atuin[Install latest Atuin]' \
                         '--mise[Install latest Mise]' \
                         '--zellij[Install latest Zellij]' \
