@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.0 (2025-12-10)
+
+### Features
+
+- Add `delta` pager
+
+### Bug fixes
+
+- Replace with newer Dockerfile on `build` and `create`
+
 ## v0.2.0 (2025-12-09)
 
 ### Features
