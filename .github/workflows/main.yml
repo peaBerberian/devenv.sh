@@ -129,7 +129,8 @@ jobs:
             --atuin \
             --mise \
             --zellij \
-            --jujutsu
+            --jujutsu \
+            --delta
 
       - name: Test create with WASM and sudo
         shell: bash
@@ -223,6 +224,7 @@ jobs:
             --mise \
             --zellij \
             --jujutsu \
+            --delta \
             --git-name "Full Test" \
             --git-email "full@test.com" \
             --package ripgrep \
@@ -614,6 +616,7 @@ jobs:
             --mise \
             --zellij \
             --jujutsu \
+            --delta \
             --git-name "Kitchen Sink" \
             --git-email "sink@kitchen.com" \
             --package ripgrep \
