@@ -69,6 +69,8 @@ Options for create (all optional):
                            (prompted if no tool specified)
   --jujutsu                Install Jujutsu (Git-compatible VCS)
                            (prompted if no tool specified)
+  --delta                  Install Delta (Colored pager for e.g. Git)
+                           (prompted if no tool specified)
   --package PKG_NAME       Additional Ubuntu package (prompted if not specified, can be repeated)
   --port PORT              Expose container port (prompted if not specified, can be repeated)
   --volume HOST:CONT[:ro]  Mount volume (prompted if not specified, can be repeated)
@@ -100,6 +102,7 @@ Full Configuration Example:
     --starship \
     --zellij \
     --jujutsu \
+    --delta \
     --enable-ssh \
     --enable-sudo \
     --git-name "John Doe" \

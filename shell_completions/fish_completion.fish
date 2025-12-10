@@ -38,6 +38,7 @@ complete -c paul-envs -n "__fish_seen_subcommand_from create" -l atuin -d "Insta
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l mise -d "Install Mise" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l zellij -d "Install Zellij" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l jujutsu -d "Install Jujutsu" -f
+complete -c paul-envs -n "__fish_seen_subcommand_from create" -l delta -d "Install Delta" -f
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l port -d 'Expose port' -x
 complete -c paul-envs -n "__fish_seen_subcommand_from create" -l volume -d 'Add volume' -r
 

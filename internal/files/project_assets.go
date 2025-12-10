@@ -51,6 +51,7 @@ type EnvTemplateData struct {
 	InstallMise     string
 	InstallZellij   string
 	InstallJujutsu  string
+	InstallDelta    string
 	GitName         string
 	GitEmail        string
 }

@@ -86,6 +86,7 @@ type parsedFlags struct {
 	installMise     bool
 	installZellij   bool
 	installJujutsu  bool
+	installDelta    bool
 	packages        []string
 	ports           []string
 	volumes         []string
@@ -121,6 +122,7 @@ func parseFlags(args []string) (*parsedFlags, bool, error) {
 	flagset.BoolVar(&p.installMise, "mise", false, "Install Mise")
 	flagset.BoolVar(&p.installZellij, "zellij", false, "Install Zellij")
 	flagset.BoolVar(&p.installJujutsu, "jujutsu", false, "Install Jujutsu")
+	flagset.BoolVar(&p.installDelta, "delta", false, "Install Delta")
 
 	// Parse repeatable flags manually
 	filtered := make([]string, 0, len(args))
@@ -236,6 +238,7 @@ func buildConfig(projectPath string, p *parsedFlags) (config.Config, error) {
 	cfg.InstallMise = p.installMise
 	cfg.InstallZellij = p.installZellij
 	cfg.InstallJujutsu = p.installJujutsu
+	cfg.InstallDelta = p.installDelta
 
 	// Project name
 	if p.name == "" {
@@ -444,7 +447,7 @@ func hasAnyTool(cfg *config.Config) bool {
 	return cfg.InstallNeovim || cfg.InstallStarship ||
 		cfg.InstallOhMyPosh ||
 		cfg.InstallAtuin || cfg.InstallMise ||
-		cfg.InstallZellij || cfg.InstallJujutsu
+		cfg.InstallZellij || cfg.InstallJujutsu || cfg.InstallDelta
 }
 
 func needsExactVersion(version string) bool {
@@ -594,6 +597,7 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 		cons.WriteLn("  5) Mise (version manager - required for specific language versions)")
 		cons.WriteLn("  6) Zellij (terminal multiplexer)")
 		cons.WriteLn("  7) Jujutsu (Git-compatible VCS)")
+		cons.WriteLn("  8) Delta (Colored pager for Git and other tools)")
 
 		choices, err := cons.AskString("Choice", "none")
 		if err != nil {
@@ -619,6 +623,8 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 				cfg.InstallZellij = true
 			case "7":
 				cfg.InstallJujutsu = true
+			case "8":
+				cfg.InstallDelta = true
 			case "none":
 				return nil
 			default:
@@ -643,6 +649,7 @@ func promptTools(cons *console.Console, cfg *config.Config) error {
 			cfg.InstallMise = false
 			cfg.InstallZellij = false
 			cfg.InstallJujutsu = false
+			cfg.InstallDelta = false
 			continue
 		}
 

@@ -45,6 +45,7 @@ func TestFileStore_CreateProjectFiles(t *testing.T) {
 		InstallMise:     "true",
 		InstallZellij:   "false",
 		InstallJujutsu:  "false",
+		InstallDelta:    "false",
 		GitName:         "Test User",
 		GitEmail:        "test@example.com",
 	}
@@ -181,6 +182,7 @@ func TestFileStore_CreateProjectComposeFiles(t *testing.T) {
 		InstallMise:     "true",
 		InstallZellij:   "false",
 		InstallJujutsu:  "false",
+		InstallDelta:    "false",
 		GitName:         "Test User",
 		GitEmail:        "test@example.com",
 	}

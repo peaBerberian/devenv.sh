@@ -94,6 +94,7 @@ type Config struct {
 	InstallMise     bool
 	InstallZellij   bool
 	InstallJujutsu  bool
+	InstallDelta    bool
 
 	Ports    []uint16
 	Volumes  []string

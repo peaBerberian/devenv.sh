@@ -1,4 +1,4 @@
-# Dockerfile - Version: 1.1.0
+# Dockerfile - Version: 1.2.0
 # ===========================
 #
 # This "Dockerfile" sets a basic Ubuntu LTS environment with a shell, the wanted
@@ -89,6 +89,7 @@ ARG INSTALL_ATUIN=false
 ARG INSTALL_MISE=false
 ARG INSTALL_ZELLIJ=false
 ARG INSTALL_JUJUTSU=false
+ARG INSTALL_DELTA=false
 ARG INSTALL_NODE=none
 ARG INSTALL_RUST=none
 ARG INSTALL_PYTHON=none
@@ -176,6 +177,24 @@ RUN if [ "$INSTALL_JUJUTSU" = "true" ]; then \
     mv jj /usr/local/bin/ && \
     chmod +x /usr/local/bin/jj && \
     rm jj.tar.gz; \
+  fi
+
+# Install Delta (optional)
+RUN if [ "$INSTALL_DELTA" = "true" ]; then \
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        DELTA_ARCH="x86_64-unknown-linux-musl"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        DELTA_ARCH="aarch64-unknown-linux-musl"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    DELTA_VERSION=$(curl -s https://api.github.com/repos/dandavison/delta/releases/latest | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"//;s/"//') && \
+    curl -L "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${DELTA_ARCH}.tar.gz" -o delta.tar.gz && \
+    tar -xzf delta.tar.gz && \
+    mv delta-${DELTA_VERSION}-${DELTA_ARCH}/delta /usr/local/bin/ && \
+    chmod +x /usr/local/bin/delta && \
+    rm -rf delta.tar.gz delta-${DELTA_VERSION}-${DELTA_ARCH}; \
   fi
 
 # Install Binaryen (optional)
@@ -371,6 +390,16 @@ RUN if [ -n "$INSTALL_NODE" ] && [ "$INSTALL_NODE" != "none" ]; then \
 # That one should just be default everywhere
 # Done before file copying to ensure that it can be overwritten
 RUN git config --global merge.conflictstyle zdiff3
+
+# Configure delta as git pager (optional)
+# Done before file copying to ensure that it can be overwritten
+RUN if [ "$INSTALL_DELTA" = "true" ]; then \
+    git config --global core.pager delta && \
+    git config --global interactive.diffFilter "delta --color-only" && \
+    git config --global delta.navigate true && \
+    git config --global merge.conflictstyle diff3 && \
+    git config --global diff.colorMoved default; \
+  fi
 
 # Copy dotfiles (may overwrite shell configs with tool init lines)
 RUN --mount=type=bind,source=${DOTFILES_DIR},target=/tmp/configs \

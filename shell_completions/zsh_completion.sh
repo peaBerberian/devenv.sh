@@ -55,6 +55,7 @@ _paulenvs() {
                         '--mise[Install latest Mise]' \
                         '--zellij[Install latest Zellij]' \
                         '--jujutsu[Install latest Jujutsu]' \
+                        '--delta[Install latest Delta]' \
                         '*--package[Additional package from Ubuntu repo]:package:' \
                         '*--port[Expose port]:port:' \
                         '*--volume[Add volume]:volume:_files'
