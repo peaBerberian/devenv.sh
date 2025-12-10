@@ -185,7 +185,7 @@ RUN if [ "$INSTALL_DELTA" = "true" ]; then \
     if [ "$ARCH" = "x86_64" ]; then \
         DELTA_ARCH="x86_64-unknown-linux-musl"; \
     elif [ "$ARCH" = "aarch64" ]; then \
-        DELTA_ARCH="aarch64-unknown-linux-musl"; \
+        DELTA_ARCH="aarch64-unknown-linux-gnu"; \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
